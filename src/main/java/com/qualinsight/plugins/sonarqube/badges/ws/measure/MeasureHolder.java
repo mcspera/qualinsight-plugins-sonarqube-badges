@@ -19,18 +19,16 @@
  */
 package com.qualinsight.plugins.sonarqube.badges.ws.measure;
 
+import com.qualinsight.plugins.sonarqube.badges.ws.SVGImageColor;
 import java.io.Serializable;
 import java.util.NoSuchElementException;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import java.util.Objects;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.Metric;
-import org.sonarqube.ws.WsMeasures.Measure;
-import org.sonarqube.ws.WsMeasures.PeriodValue;
-import org.sonarqube.ws.WsMeasures.PeriodsValue;
-import com.qualinsight.plugins.sonarqube.badges.ws.SVGImageColor;
+import org.sonarqube.ws.Measures;
 
 /**
  * Holds measure badge data.
@@ -57,9 +55,9 @@ public class MeasureHolder {
     public MeasureHolder(final String metricKey) {
         try {
             this.metricName = CoreMetrics.getMetric(metricKey)
-                .getName()
-                .replace(" (%)", "")
-                .toLowerCase();
+                    .getName()
+                    .replace(" (%)", "")
+                    .toLowerCase();
         } catch (final NoSuchElementException e) {
             LOGGER.debug("Metric '{}' is not referenced in CoreMetrics.", metricKey, e);
             this.metricName = metricKey;
@@ -73,16 +71,16 @@ public class MeasureHolder {
      * @param measure used to retrieve the metric name for which the MeasureHolder is built
      */
     @SuppressWarnings("unchecked")
-    public MeasureHolder(final Measure measure) {
+    public MeasureHolder(final Measures.Measure measure) {
         final Metric<Serializable> metric = CoreMetrics.getMetric(measure.getMetric());
         this.metricName = metric.getName()
-            .replace(" (%)", "")
-            .toLowerCase();
+                .replace(" (%)", "")
+                .toLowerCase();
         String tempValue = null;
         if (!measure.hasValue()) {
             if (measure.hasPeriods()) {
-                final PeriodsValue periods = measure.getPeriods();
-                final PeriodValue periodValue = periods.getPeriodsValue(0);
+                final Measures.PeriodsValue periods = measure.getPeriods();
+                final Measures.PeriodValue periodValue = periods.getPeriodsValue(0);
                 tempValue = periodValue.getValue();
             }
         } else {
@@ -129,10 +127,7 @@ public class MeasureHolder {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(this.metricName)
-            .append(this.value)
-            .append(this.backgroundColor)
-            .toHashCode();
+        return Objects.hash(this.metricName, this.value, this.backgroundColor);
     }
 
     @Override
@@ -142,9 +137,9 @@ public class MeasureHolder {
         }
         final MeasureHolder other = (MeasureHolder) obj;
         return new EqualsBuilder().append(this.metricName, other.metricName)
-            .append(this.value, other.value)
-            .append(this.backgroundColor, other.backgroundColor)
-            .isEquals();
+                .append(this.value, other.value)
+                .append(this.backgroundColor, other.backgroundColor)
+                .isEquals();
     }
 
 }

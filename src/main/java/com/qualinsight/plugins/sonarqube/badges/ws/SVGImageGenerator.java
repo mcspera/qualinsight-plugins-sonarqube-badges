@@ -19,17 +19,17 @@
  */
 package com.qualinsight.plugins.sonarqube.badges.ws;
 
+import com.qualinsight.plugins.sonarqube.badges.font.FontProvider;
+import com.qualinsight.plugins.sonarqube.badges.font.FontProviderLocator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.server.ServerSide;
-import com.qualinsight.plugins.sonarqube.badges.font.FontProvider;
-import com.qualinsight.plugins.sonarqube.badges.font.FontProviderLocator;
 
 /**
  * Generates SVG images.
@@ -66,21 +66,21 @@ public final class SVGImageGenerator {
         replacements.put("{{fontFamily}}", data.fontFamily());
         replacements.put("{{labelText}}", data.labelText());
         replacements.put("{{labelBackgroundColor}}", data.labelBackgroundColor()
-            .hexColor());
+                .hexColor());
         replacements.put("{{labelWidth}}", data.labelWidth());
         replacements.put("{{labelHalfWidth}}", data.labelHalfWidth());
         replacements.put("{{valueText}}", data.valueText());
         replacements.put("{{valueBackgroundColor}}", data.valueBackgroundColor()
-            .hexColor());
+                .hexColor());
         replacements.put("{{valueWidth}}", data.valueWidth());
         replacements.put("{{valueHalfWidth}}", data.valueHalfWidth());
         replacements.put("{{totalWidth}}", data.totalWidth());
         return IOUtils.toInputStream(StringUtils.replaceEach(data.template()
-            .content(),
-            replacements.keySet()
-                .toArray(new String[0]),
-            replacements.values()
-                .toArray(new String[0])));
+                        .content(),
+                replacements.keySet()
+                        .toArray(new String[0]),
+                replacements.values()
+                        .toArray(new String[0])));
     }
 
     /**

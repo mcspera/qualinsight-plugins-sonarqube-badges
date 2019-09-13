@@ -19,6 +19,8 @@
  */
 package com.qualinsight.plugins.sonarqube.badges.ws.gate;
 
+import com.qualinsight.plugins.sonarqube.badges.BadgesPluginProperties;
+import com.qualinsight.plugins.sonarqube.badges.ws.SVGImageTemplate;
 import java.io.InputStream;
 import java.io.OutputStream;
 import org.apache.commons.io.IOUtils;
@@ -29,13 +31,11 @@ import org.sonar.api.server.ServerSide;
 import org.sonar.api.server.ws.Request;
 import org.sonar.api.server.ws.RequestHandler;
 import org.sonar.api.server.ws.Response;
-import org.sonarqube.ws.WsQualityGates.ProjectStatusWsResponse;
+import org.sonarqube.ws.Qualitygates;
 import org.sonarqube.ws.client.HttpException;
 import org.sonarqube.ws.client.WsClient;
 import org.sonarqube.ws.client.WsClientFactories;
-import org.sonarqube.ws.client.qualitygate.ProjectStatusWsRequest;
-import com.qualinsight.plugins.sonarqube.badges.BadgesPluginProperties;
-import com.qualinsight.plugins.sonarqube.badges.ws.SVGImageTemplate;
+import org.sonarqube.ws.client.qualitygates.ProjectStatusRequest;
 
 /**
  * {@link RequestHandler} implementation that handles Quality Gate badges requests.
@@ -55,9 +55,10 @@ public class QualityGateBadgeRequestHandler implements RequestHandler {
      * {@link QualityGateBadgeRequestHandler} IoC constructor
      *
      * @param qualityGateBadgeGenerator helper extension that generate quality gate badges
-     * @param settings SonarQube properties
+     * @param settings                  SonarQube properties
      */
-    public QualityGateBadgeRequestHandler(final QualityGateBadgeGenerator qualityGateBadgeGenerator, final Settings settings) {
+    public QualityGateBadgeRequestHandler(final QualityGateBadgeGenerator qualityGateBadgeGenerator,
+            final Settings settings) {
         this.qualityGateBadgeGenerator = qualityGateBadgeGenerator;
         this.settings = settings;
     }
@@ -69,24 +70,24 @@ public class QualityGateBadgeRequestHandler implements RequestHandler {
             final SVGImageTemplate template = request.mandatoryParamAsEnum("template", SVGImageTemplate.class);
             final boolean blinkingValueBackgroundColor = request.mandatoryParamAsBoolean("blinking");
             final WsClient wsClient = WsClientFactories.getLocal()
-                .newClient(request.localConnector());
+                    .newClient(request.localConnector());
             LOGGER.debug("Retrieving quality gate status for key '{}'.", key);
             QualityGateBadge status = QualityGateBadge.NOT_FOUND;
             try {
-                final ProjectStatusWsRequest wsRequest = new ProjectStatusWsRequest();
+                final ProjectStatusRequest wsRequest = new ProjectStatusRequest();
                 wsRequest.setProjectKey(key);
-                final ProjectStatusWsResponse wsResponse = wsClient.qualityGates()
-                    .projectStatus(wsRequest);
-                status = QualityGateBadge.valueOf(wsResponse.getProjectStatus()
-                    .getStatus()
-                    .toString());
+                Qualitygates.ProjectStatusResponse projectStatusResponse = wsClient.qualitygates()
+                        .projectStatus(wsRequest);
+                status = QualityGateBadge.valueOf(projectStatusResponse.getProjectStatus()
+                        .getStatus()
+                        .toString());
             } catch (final HttpException e) {
                 LOGGER.debug("No project found with key '{}': {}", key, e);
             }
             // we prepare the response OutputStream
             final OutputStream responseOutputStream = response.stream()
-                .setMediaType("image/svg+xml")
-                .output();
+                    .setMediaType("image/svg+xml")
+                    .output();
             LOGGER.debug("Retrieving SVG image for for quality gate status '{}'.", status);
             final InputStream svgImageInputStream = this.qualityGateBadgeGenerator.svgImageInputStreamFor(status, template, blinkingValueBackgroundColor);
             LOGGER.debug("Writing SVG image to response OutputStream.");
